@@ -1,0 +1,54 @@
+---
+title: "Exploring Indian Weather Patterns: Insights from Data"
+output: html_document
+author: Jeffrey Asubonteng
+date: "2023-11-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Introduction
+
+This report focuses on exploring Indian weather dataset. This dataset can be found
+on Kaggle website. It is about 7MB, consisting of 28448 observations and 42 variables, some of which include temperature, humidity, region, etc. The goal of this project is to apply what I have
+learnt in my datascience class to explore the dataset. In this report, I apply Principal
+Component Analysis, t-SNE, clustering, supervised learning, and data visualization on the dataset. With these statistical method mentioned, I apply them on some selected variables.
+
+```{r}
+
+library(readr)
+IndianWeatherRepository <- read_csv("./source_data/IndianWeatherRepository.csv")
+
+IndianWeather <- IndianWeatherRepository
+```
+
+### Data Overview and Analysis
+* Temperature trends over time
+
+Temperature variable in the dataset are in both celcius and farenheit so I chose the temperature-celcius variable against the last time the dataset was updated. From the figure,
+the teperature was well distributed. 
+
+
+```{r}
+library(ggplot2)
+
+ggplot(IndianWeather, aes(x = last_updated, y = temperature_celsius)) +
+  geom_line() +
+  labs(title = "Temperature Trends over Time", x = "Date", y = "Temperature (°C)")
+```
+
+* Distribution of weather conditions
+
+Among the observations, there are different weather conditions in the dataset so I considered to visualize the counts. From the count, it is observed that India has more clear weather condition compared to the others.
+```{r}
+# Weather Conditions
+library(ggplot2)
+ggplot(IndianWeather, aes(x = condition_text)) +
+  geom_bar() +
+  coord_flip() +
+  labs(title = "Weather Conditions", x = "Count", y = "Condition")
+```
+
+
