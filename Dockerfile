@@ -11,4 +11,5 @@ RUN R -e "install.packages('caret')"
 RUN R -e "install.packages('randomForest')"
 RUN R -e "install.packages('Metrics')"
 RUN R -e "install.packages('dbscan')"
+RUN R -e "install.packages('Rmarkdown')"
 

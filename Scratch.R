@@ -1,10 +1,7 @@
 #### Indian Weather Repo
 
 library(readr)
-#IndianWeatherRepository <- read_csv("./source_data/IndianWeatherRepository.csv")
-library(readr)
-IndianWeatherRepository <- read_csv("my_project/source_data/IndianWeatherRepository.csv")
-
+IndianWeatherRepository <- read_csv("./source_data/IndianWeatherRepository.csv")
 IndianWeather <- IndianWeatherRepository
 
 # Temperature trend
@@ -24,7 +21,6 @@ ggplot(IndianWeather, aes(x = condition_text)) +
 ggsave("Figures/Weather_cond.png")
 
 library(ggplot2)
-
 # You might need to adjust the size scaling factor (size = ...) based on your data
 ggplot(IndianWeather, aes(x = location_name, y = region, size = condition_text)) +
   geom_point(alpha = 0.6) +
@@ -43,7 +39,6 @@ outliers_data <- IndianWeather[outliers_temperature, ]
 
 
 library(ggplot2)
-
 ggplot(data = IndianWeather, aes(x = longitude, y = latitude, color = temperature_celsius)) +
   geom_point() +
   scale_color_gradient(low = "blue", high = "red", name = "Temperature (Celsius)") +
@@ -74,9 +69,9 @@ table(cluster_assignments)
 plot(pc_scores[, 1], pc_scores[, 2], 
      col = cluster_assignments, pch = 16,
      xlab = "Principal Component 1", ylab = "Principal Component 2",
-     main = "Clustered Data (PC1 vs. PC2)")
+     main = "PC1 vs. PC2")
 legend("topright", legend = unique(cluster_assignments), col = 1:length(unique(cluster_assignments)), pch = 16)
-ggsave("Figures/Clustered_Data.png")
+ggsave("Figures/Prin_com.png")
 
 
 
@@ -181,6 +176,7 @@ ggsave("Figures/t-SNE.png")
 # Supervised Learning
 
 # Split data
+
 X <- IndianWeather_subset
 y <- IndianWeather$temperature_celsius  # Target variable
 
