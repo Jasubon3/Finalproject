@@ -25,9 +25,10 @@ IndianWeather <- IndianWeatherRepository
 ```
 
 ### Data Overview and Analysis
+
 * Temperature trends over time
 
-Temperature variable in the dataset are in both celcius and farenheit so I chose the temperature-celcius variable against the last time the dataset was updated. From the figure,
+Temperature variable in the dataset are in both celsius and farenheit so I chose the temperature-celsius variable against the last time the dataset was updated. From the figure,
 the teperature was well distributed. 
 
 
@@ -42,6 +43,7 @@ ggplot(IndianWeather, aes(x = last_updated, y = temperature_celsius)) +
 * Distribution of weather conditions
 
 Among the observations, there are different weather conditions in the dataset so I considered to visualize the counts. From the count, it is observed that India has more clear weather condition compared to the others.
+
 ```{r}
 # Weather Conditions
 library(ggplot2)
@@ -51,4 +53,195 @@ ggplot(IndianWeather, aes(x = condition_text)) +
   labs(title = "Weather Conditions", x = "Count", y = "Condition")
 ```
 
+* Geographic temperature variation
 
+I delve into the analysis of temperature variations across locations in India. 
+Utilizing statistical visualization I aim to elucidate the spatial distribution of temperatures
+throughout the country. The code below constructs a geographical scatter plot depicting temperature fluctuations across longitude and latitude coordinates in India. The visualization
+represents temperature values as a color gradient, allowing for an intuitive 
+comprehension of temperature disparities across various geographical regions.
+
+```{r}
+library(ggplot2)
+ggplot(data = IndianWeather, aes(x = longitude, y = latitude, color = temperature_celsius)) +
+  geom_point() +
+  scale_color_gradient(low = "blue", high = "red", name = "Temperature (Celsius)") +
+  labs(title = "Temperature Variation by Location in India")
+
+```
+
+* Other multivariate analysis using PCA and clustering techniques
+
+Principal component analysis reduces data dimensionality, revealing the variance captured 
+by PC1 and PC2. The code below visualizes PC1 vs. PC2 incorporating K-means clustering
+to identify data groupings.
+
+```{r}
+selected_variables <- IndianWeather[, c("temperature_celsius", "humidity", "wind_mph")]
+scaled_data <- scale(selected_variables) 
+
+pca_result <- princomp(scaled_data)
+# View the loadings for the first two principal components
+loadings(pca_result)[, 1:2]
+
+# Extract PC scores
+pc_scores <- pca_result$scores
+
+
+# Clustering
+num_clusters <- 3
+kmeans_result <- kmeans(scaled_data, centers = num_clusters)
+
+cluster_assignments <- kmeans_result$cluster
+table(cluster_assignments)
+
+
+# Assuming PC1 and PC2 are the first two principal components
+plot(pc_scores[, 1], pc_scores[, 2], 
+     col = cluster_assignments, pch = 16,
+     xlab = "Principal Component 1", ylab = "Principal Component 2",
+     main = "PC1 vs. PC2")
+legend("topright", legend = unique(cluster_assignments), col = 1:length(unique(cluster_assignments)), pch = 16)
+```
+
+* Correlation Analysis
+
+To better understand the relationships between wind speed, humidity, and sunrise, correlation coefficients were computed. The correlation table reveals the strength and direction of 
+associations between these variables.
+
+```{r}
+relevant_data <- IndianWeather[, c("wind_mph", "humidity", "sunrise")]
+
+# Convert time of sunrise to numeric format (e.g., minutes since midnight)
+relevant_data$sunrise_numeric <- as.numeric(relevant_data$sunrise)
+# Selecting relevant columns for correlation
+relevant_columns <- relevant_data[c("wind_mph", "humidity", "sunrise_numeric")]
+
+# Calculating correlation matrix
+correlation_matrix <- cor(relevant_columns)
+
+correlation_matrix
+```
+* Heatmap Visualization.
+
+A heatmap representation of these correlations visually displays the relationships
+among the variables. The graphical illustration aids in the easy identification of 
+varifying degrees of association between wind speed, humidity, and sunrise.
+
+```{r}
+library(ggplot2)
+library(reshape2)
+correlation_matrix <- data.frame(
+  wind_mph = c(1.00000000, -0.01813135, 0.24702198),
+  humidity = c(-0.01813135, 1.00000000, -0.42345699),
+  sunrise_numeric = c(0.247022, -0.423457, 1.000000)
+)
+
+# Redefine the melted matrix with variable names specified
+melted_matrix <- melt(correlation_matrix)
+
+ggplot(melted_matrix, aes(x = variable, y = variable, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(title = "Correlation Heatmap") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+* PCA and t-SNE analysis
+
+Principal Component Analysis and t-distributed Stochastic Neighbor Embedding were conducted 
+on the selected variables. The results, visually represent, reveal the underlying 
+structures and relationships among these variables in reduced dimensions. These visualizations
+assist in comprehending complex interrelationships among the variables, offering
+insights into their mutual associations and potential patterns.
+
+```{r}
+library(dplyr)
+IndianWeather_subset <- IndianWeather %>%
+  mutate(sunrise_seconds = as.numeric(IndianWeather$sunrise)) %>%
+  select(wind_mph, humidity, sunrise_seconds)
+
+# Assuming 'IndianWeather_subset' contains your data
+pca_result1 <- prcomp(IndianWeather_subset, scale. = TRUE)
+summary(pca_result1)
+
+library(ggplot2)
+# Convert PCA result to a data frame
+pca_df <- as.data.frame(pca_result1$x[, 1:2])  # Considering the first two principal components
+ggplot(pca_df, aes(x = PC1, y = PC2, color = IndianWeather_subset$wind_mph)) +
+  geom_point() +
+  labs(title = "PCA Plot with Color") +
+  theme_minimal()
+
+# TSNE
+
+library(Rtsne)
+
+IndianWeather_unique <- unique(IndianWeather_subset)
+
+tsne_result <- Rtsne(IndianWeather_unique, dims = 2, perplexity = 30, verbose = TRUE)
+tsne_df <- as.data.frame(tsne_result$Y)
+
+ggplot(tsne_df, aes(x = V1, y = V2)) +
+  geom_point() +
+  labs(title = "t-SNE Plot") +
+  theme_minimal()
+```
+
+* Supervised Learning
+
+I delved into supervised learning, employing random forest model to predict tempeature 
+from the dataset. After splitting the data into training and testing set, I trained the 
+model using root mean squared error. Below is the code and plot generated from the model.
+
+
+```{r}
+X <- IndianWeather_subset
+y <- IndianWeather$temperature_celsius  # Target variable
+
+#Train-Test split
+
+library(caret)
+set.seed(123)  # For reproducibility
+trainIndex <- createDataPartition(y, p = 0.7, list = FALSE)
+X_train <- X[trainIndex, ]
+X_test <- X[-trainIndex, ]
+y_train <- y[trainIndex]
+y_test <- y[-trainIndex]
+
+# Model selection and training
+library(randomForest)
+model <- randomForest(y_train ~ ., data = X_train)
+
+# Prediction
+predictions <- predict(model, newdata = X_test)
+
+
+library(Metrics)
+rmse_value <- rmse(predictions, y_test)
+
+# Visualization
+
+library(ggplot2)
+
+# Create a data frame with actual and predicted values
+data <- data.frame(Actual = y_test, Predicted = predictions)
+
+# Plotting actual vs predicted values
+ggplot(data, aes(x = Actual, y = Predicted)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +  # Adding a diagonal line for reference
+  labs(title = "Actual vs Predicted of temperature", x = "Actual Values", y = "Predicted Values") +
+  theme_minimal()
+```
+
+### Conclusion
+
+In this project, I observed that temperature from the last time the dataset was updated 
+did not varied that much. Temperature was normally between -9 to 38 degrees celsius. 
+There were various weather condition in India. Per count, the weather condition is mostly clear, followed by mist and partly cloudy weather. The principal component analysis that I performed on Temperature, Humidity and wind speed, the clusters were difficult to identified except the color improved the visualization. Again, PCA on  wind_mph, humidity, sunrise_seconds
+did not generate anything interesting. But the t-SNE visualization on wind_mph, humidity, sunrise_seconds looks aesthetically pleasing. Lastly, the supervised learning performed on temperature generated a better model. This is observed from the actual vs predicted temperature plot as the temperature data point are clustered as long the line.
+
+This dataset contains a lot of variables which are meaningful but I chose to focused on few variables like temperature, humidity, sunrise and others. I have not found anything interesting so far except for the t-SNE analysis which I don't understand how it generated the figure, but as time goes on in my analysis I hope to achieve something educative.
