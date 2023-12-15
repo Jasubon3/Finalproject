@@ -357,9 +357,22 @@ display: none;
 <div id="instruction-to-run-this-code" class="section level3">
 <h3>Instruction to run this code</h3>
 <p>This project was done on Apple M1 chip.</p>
-<p>Run this Docker container using the command line</p>
-<pre><code>docker run -v $(pwd):/home/rstudio/my_project --rm -ti -p 8787:8787 611</code></pre>
-<p>Then visit <a href="http://localhost:8787" class="uri">http://localhost:8787</a></p>
+<ul>
+<li>Clone repository</li>
+</ul>
+<pre><code>git clone https://github.com/Jasubon3/Finalproject
+cd my_project</code></pre>
+<ul>
+<li>Build the Docker container using the command line</li>
+</ul>
+<pre><code>Docker build . -t 611</code></pre>
+<ul>
+<li>Run the container</li>
+</ul>
+<pre><code>docker run -v $(pwd):/home/rstudio/my_project --rm -ti -p 8787:8787 611
+</code></pre>
+<p>Then visit <a href="http://localhost:8787" class="uri">http://localhost:8787</a> and log into the Rstudio
+server.</p>
 </div>
 <div id="project-organization" class="section level3">
 <h3>Project Organization</h3>
@@ -378,7 +391,13 @@ implementing what I learnt in class.</p></li>
 <div id="results" class="section level3">
 <h3>Results</h3>
 <p>This report describes what I found in Indian Weather patterns.</p>
-<p>Build the report to get the details.</p>
+<ul>
+<li>Build the report to get the details.</li>
+</ul>
+<pre><code>cd my_project
+</code></pre>
+<pre><code>make BIOS611_project_report.html
+</code></pre>
 </div>
 </div>
 
